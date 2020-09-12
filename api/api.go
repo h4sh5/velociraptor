@@ -682,6 +682,19 @@ func (self *ApiServer) GetArtifacts(
 			self.config, in.ReportType, in.NumberOfResults)
 	}
 
+	// allow return "everything" (with limited records)
+	if strings.Compare(in.SearchTerm, "") == 0 {
+		all_limit := in.NumberOfResults
+		if in.NumberOfResults == 0 {
+			all_limit = 2000
+		}
+		fmt.Printf("Search term is empty, returning up to all %d records\n", all_limit)
+		terms := [1]string{"*"}
+		result, err := searchArtifact(
+			self.config, terms[:], in.Type, all_limit)
+		return result, err
+	}
+
 	terms := strings.Split(in.SearchTerm, " ")
 	result, err := searchArtifact(
 		self.config, terms, in.Type, in.NumberOfResults)

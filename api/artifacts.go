@@ -192,6 +192,36 @@ func searchArtifact(
 		return nil, errors.New("GUI not configured")
 	}
 
+	if number_of_results == 0 {
+		number_of_results = 100
+	}
+
+	// add "return all" functionality without breaking compatibility
+	if strings.Compare(terms[0], "*") == 0  {
+		result := &artifacts_proto.ArtifactDescriptors{}
+		repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, name := range repository.List() {
+			artifact, pres := repository.Get(config_obj, name)
+			if pres {
+				result.Items = append(result.Items, artifact)
+				if len(result.Items) >= int(number_of_results) {
+					break
+				}
+		
+			}
+
+		}
+
+		return result, nil;
+	}
+		
+
+
 	name_filter_regexp := config_obj.GUI.ArtifactSearchFilter
 	if name_filter_regexp == "" {
 		name_filter_regexp = "."
@@ -200,9 +230,7 @@ func searchArtifact(
 
 	artifact_type = strings.ToLower(artifact_type)
 
-	if number_of_results == 0 {
-		number_of_results = 100
-	}
+	
 
 	result := &artifacts_proto.ArtifactDescriptors{}
 	regexes := []*regexp.Regexp{}
